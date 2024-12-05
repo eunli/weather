@@ -1,5 +1,6 @@
 package com.example.weather.service;
 
+import com.example.weather.WeatherApplication;
 import com.example.weather.domain.DateWeather;
 import com.example.weather.domain.Diary;
 import com.example.weather.repository.DateWeatherRepository;
@@ -8,6 +9,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -32,6 +35,8 @@ public class DiaryService {
     private final DiaryRepository diaryRepository;
     private final DateWeatherRepository dateWeatherRepository;
 
+    private static final Logger logger = LoggerFactory.getLogger(WeatherApplication.class);
+
     public DiaryService(DiaryRepository diaryRepository, DateWeatherRepository dateWeatherRepository) {
         this.diaryRepository = diaryRepository;
         this.dateWeatherRepository = dateWeatherRepository;
@@ -39,12 +44,14 @@ public class DiaryService {
 
     @Transactional
     @Scheduled(cron = "0 0 1 * * *")
-    public void saveWeatherDate() {
+    public void saveWeatherData() {
         dateWeatherRepository.save(getWeatherFromApi());
+        logger.info("Weather data saved");
     }
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public void createDiary(LocalDate date, String text) {
+        logger.info("Creating Diary");
         // 날씨 데이터 가져오기(API or DB)
         DateWeather dateWeather = getDateWeather(date);
 
@@ -53,6 +60,7 @@ public class DiaryService {
         nowDiary.setDateWeather(dateWeather);
         nowDiary.setText(text);
         diaryRepository.save(nowDiary);
+        logger.info("Diary created");
     }
 
     private DateWeather getWeatherFromApi() {
